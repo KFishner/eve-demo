@@ -21,8 +21,12 @@ https://github.com/nicolaiarocci/eve-demo-client.
 only updated when major Eve updates are released. Please refer to the official
 Eve repository for an up-to-date features list. 
 
-Deploying Eve
+Deploy Eve on AWS
 =============
+Introduction
+------------
+To deploy Eve on Amazon Web Services, we're using Atlas_ by HashiCorp. The first step is building AMIs with Eve and MongoDB installed, and the second step is simply deploying those to AWS. 
+
 General setup
 -------------
 1. Clone this repository
@@ -31,8 +35,8 @@ General setup
 `export ATLAS_TOKEN=<your_token>`
 4. In the Vagrantfile, Packer files `eve.json` and `mongo.json`, Terraform file `infrastructure.tf`, and Consul upstart script `consul_client.conf` you need to replace all instances of `<username>`,  `YOUR_ATLAS_TOKEN`, `YOUR_SECRET_HERE`, and `YOUR_KEY_HERE` with your Atlas username, Atlas token, and AWS keys.
 
-Introduction and Configuring Eve Python API and MongoDB
------------------------------------------------
+Configuring Eve Python API and MongoDB
+--------------------------------------
 Before jumping into configuration steps, it's helpful to have a mental model for how services connect and how the Atlas workflow fits in. 
 
 For the Eve REST API to work properly, it needs to connect to the MongoDB instance. Additionally, the MongoDB instance must be able to accept remote requests. Both Eve and Mongo have configuration files that should be dynamically updated with proper IP values. To accomplish this, we use [Consul](https://consul.io) and [Consul Template](https://github.com/hashicorp/consul-template). Any time a server is created, destroyed, or changes in health state, both the Eve and MongoDB configurations update to match by using the Consul Templates `settings.ctmpl` and `mongod.ctmpl`. For MongoDB, we set the bind_ip equal to the instance's private IP:
@@ -54,16 +58,16 @@ In both configurations, Consul Template will query Consul for all nodes with the
 This dyanamic setup allows us to destroy and create Eve API servers at scale with confidence that the Eve configuration will always be up-to-date. You can think of Consul and Consul Template as the connective webbing between services. 
 
 Step 1: Create a Consul Cluster
--------------------------
+-------------------------------
 1. For Consul Template to work for with this setup, we first need to create a Consul cluster. You can follow [this walkthrough](https://github.com/hashicorp/atlas-examples/tree/master/consul) to guide you through that process.
 
 Step 2: Build an MongoDB AMI
----------------------
+----------------------------
 1. Build an AMI with MongoDB installed. To do this, run `packer push -create mongo.json` in the ops directory. This will send the build configuration to Atlas so it can build your MongoDB AMI remotely. 
 2. View the status of your build in the Operations tab of your [Atlas account](atlas.hashicorp.com/operations).
 
 Step 3: Build an Eve AMI
--------------------
+------------------------
 1. Build an AMI with Eve installed. To do this, run `packer push -create eve.json` in the ops directory. This will send the build configuration to Atlas so it can build your Eve AMI remotely. 
 2. View the status of your build in the Operations tab of your [Atlas account](atlas.hashicorp.com/operations).
 3. This creates an AMI with Eve installed, and now you need to send the actual Eve application code to Atlas and link it to the build configuration. To do this, simply run `vagrant push` in the app directory. This will send your Eve application, which is just the `run.py` file for now. Then link the Eve application with the Eve build configuration by clicking on your build configuration, then 'Links' in the left navigation. Complete the form with your username, 'eve' as the application name, and '/app' as the destination path.
@@ -138,3 +142,4 @@ Final Step: Test Eve
 .. _Eve: http://python-eve.org
 .. _run.py: https://github.com/nicolaiarocci/eve-demo/blob/master/run.py
 .. _settings.py: https://github.com/nicolaiarocci/eve-demo/blob/master/settings.py
+.. _Atlas: https://atlas.hashicorp.com
