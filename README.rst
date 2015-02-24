@@ -31,7 +31,7 @@ General setup
 -------------
 1. Clone this repository
 2. Create an Atlas account
-3. Generate an `Atlas token<https://atlas.hashicorp.com/settings/tokens>` and save as environment variable. 
+3. Generate an `Atlas token<https://atlas.hashicorp.com/settings/tokens>`_ and save as environment variable. 
 ``
 export ATLAS_TOKEN=<your_token>
 ``
