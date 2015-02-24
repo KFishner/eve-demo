@@ -41,19 +41,15 @@ Configuring Eve Python API and MongoDB
 --------------------------------------
 Before jumping into configuration steps, it's helpful to have a mental model for how services connect and how the Atlas workflow fits in. 
 
-For the Eve REST API to work properly, it needs to connect to the MongoDB instance. Additionally, the MongoDB instance must be able to accept remote requests. Both Eve and Mongo have configuration files that should be dynamically updated with proper IP values. To accomplish this, we use `Consul<https://consul.io>` and `Consul Template<https://github.com/hashicorp/consul-template>. Any time a server is created, destroyed, or changes in health state, both the Eve and MongoDB configurations update to match by using the Consul Templates "settings.ctmpl" and "mongod.ctmpl". For MongoDB, we set the bind_ip equal to the instance's private IP:
+For the Eve REST API to work properly, it needs to connect to the MongoDB instance. Additionally, the MongoDB instance must be able to accept remote requests. Both Eve and Mongo have configuration files that should be dynamically updated with proper IP values. To accomplish this, we use `Consul<https://consul.io>` and `Consul Template<https://github.com/hashicorp/consul-template>. Any time a server is created, destroyed, or changes in health state, both the Eve and MongoDB configurations update to match by using the Consul Templates "settings.ctmpl" and "mongod.ctmpl". For MongoDB, we set the bind_ip equal to the instance's private IP::
 
-``
-{{range service "database"}}
-bind_ip = {{.Address}}{{end}}
-``
+  {{range service "database"}}
+  bind_ip = {{.Address}}{{end}}
 
-For Eve, set the MONGO_HOST IP equal to the private IP of the MongoDB instance.
+For Eve, set the MONGO_HOST IP equal to the private IP of the MongoDB instance.::
 
-```
-{{range service "database"}}
-MONGO_HOST = '{{.Address}}'{{end}}
-```
+  {{range service "database"}}
+  MONGO_HOST = '{{.Address}}'{{end}}
 
 In both configurations, Consul Template will query Consul for all nodes with the service "database", and then iterate through the list to populate the configuration file with the correct value. In our example, we only have one "database" instance, but it's possible you could have many.
 
@@ -77,61 +73,51 @@ Step 3: Build an Eve AMI
 
 Step 4: Deploy Eve and MongoDB
 --------------------------
-1. To deploy Eve and MongoDB, all you need to do is run ``terraform apply`` in the ops/terraform folder. Be sure to run ``terraform apply`` only on the artifacts first. The easiest way to do this is comment out the `aws_instance` resources and then run ``terraform apply``. Once the artifacts are created, just uncomment the ``aws_instance`` resources and run ``terraform apply`` on the full configuration. Watch Terraform provision three instances — two with Eve and one with MongoDB! 
+1. To deploy Eve and MongoDB, all you need to do is run ``terraform apply`` in the ops/terraform folder. Be sure to run ``terraform apply`` only on the artifacts first. The easiest way to do this is comment out the `aws_instance` resources and then run ``terraform apply``. Once the artifacts are created, just uncomment the ``aws_instance`` resources and run ``terraform apply`` on the full configuration. Watch Terraform provision three instances — two with Eve and one with MongoDB!::
 
-```
-provider "aws" {
-    access_key = "YOUR_KEY_HERE"
-    secret_key = "YOUR_SECRET_HERE"
-    region = "us-east-1"
-}
-
-resource "atlas_artifact" "eve" {
-    name = "<username>/eve"
-    type = "aws.ami"
-}
-
-resource "atlas_artifact" "mongo" {
-    name = "<username>/mongo"
-    type = "aws.ami"
-}
-
-// resource "aws_security_group" "allow_all" {
-//   name = "allow_all"
-//     description = "Allow all inbound traffic"
-
-//   ingress {
-//       from_port = 0
-//       to_port = 65535
-//       protocol = "tcp"
-//       cidr_blocks = ["0.0.0.0/0"]
-//   }
-// }
-
-// resource "aws_instance" "eve" {
-//     instance_type = "t2.small"
-//     ami = "${atlas_artifact.eve.metadata_full.region-us-east-1}"
-//     security_groups = ["${aws_security_group.allow_all.name}"]
-
-//     # This will create 2 instances
-//     count = 2
-//     lifecycle = {
-//       create_before_destroy = true
-//     }
-// }
-
-// resource "aws_instance" "mongo" {
-//     instance_type = "t2.small"
-//     ami = "${atlas_artifact.mongo.metadata_full.region-us-east-1}"
-//     security_groups = ["${aws_security_group.allow_all.name}"]
-
-//     # This will create 1 instances
-//     count = 1
-//     lifecycle = {
-//       create_before_destroy = true  
-//     }
-// }
-```
+  provider "aws" {
+      access_key = "YOUR_KEY_HERE"
+      secret_key = "YOUR_SECRET_HERE"
+      region = "us-east-1"
+  }
+  resource "atlas_artifact" "eve" {
+      name = "<username>/eve"
+      type = "aws.ami"
+  }
+  resource "atlas_artifact" "mongo" {
+      name = "<username>/mongo"
+      type = "aws.ami"
+  }
+  // resource "aws_security_group" "allow_all" {
+  //   name = "allow_all"
+  //     description = "Allow all inbound traffic"
+  //   ingress {
+  //       from_port = 0
+  //       to_port = 65535
+  //       protocol = "tcp"
+  //       cidr_blocks = ["0.0.0.0/0"]
+  //   }
+  // }
+  // resource "aws_instance" "eve" {
+  //     instance_type = "t2.small"
+  //     ami = "${atlas_artifact.eve.metadata_full.region-us-east-1}"
+  //     security_groups = ["${aws_security_group.allow_all.name}"]
+  //     # This will create 2 instances
+  //     count = 2
+  //     lifecycle = {
+  //       create_before_destroy = true
+  //     }
+  // }
+  // resource "aws_instance" "mongo" {
+  //     instance_type = "t2.small"
+  //     ami = "${atlas_artifact.mongo.metadata_full.region-us-east-1}"
+  //     security_groups = ["${aws_security_group.allow_all.name}"]
+  //     # This will create 1 instances
+  //     count = 1
+  //     lifecycle = {
+  //       create_before_destroy = true  
+  //     }
+  // }
 
 Final Step: Test Eve
 ------------------------
