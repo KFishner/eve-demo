@@ -59,7 +59,7 @@ Step 1: Create a Consul Cluster
 -------------------------------
 1. For Consul Template to work for with this setup, we first need to create a Consul cluster. You can follow `this walkthrough`_ to guide you through that process.
 
-Step 2: Build an MongoDB AMI
+Step 2: Build a MongoDB AMI
 ----------------------------
 1. Build an AMI with MongoDB installed. To do this, run ``packer push -create mongo.json`` in the ops directory. This will send the build configuration to Atlas so it can build your MongoDB AMI remotely. 
 2. View the status of your build in the Operations tab of your `Atlas account`_.
